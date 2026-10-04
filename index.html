@@ -19,8 +19,9 @@
 <div class="overlay" id="submitModal" role="dialog" aria-modal="true" aria-labelledby="submitTitle"><div class="panel"><div class="panel-head"><h2 id="submitTitle">Submit a product</h2><button class="xbtn" id="submitClose">Close ✕</button></div><div class="notice">Submit a product for review. It will not appear in the shop until the shop owner approves it. Please provide an image URL from a publicly accessible image.</div><form id="submissionForm"><div class="formgrid"><div class="field"><label for="pName">Product name *</label><input id="pName" required maxlength="100"></div><div class="field"><label for="pPrice">Price (UGX) *</label><input id="pPrice" required type="number" min="0" step="1"></div><div class="field"><label for="pCategory">Category</label><input id="pCategory" maxlength="50" placeholder="e.g. Fashion"></div><div class="field"><label for="pImage">Image URL</label><input id="pImage" type="url" placeholder="https://…"></div><div class="field wide"><label for="pDescription">Description</label><textarea id="pDescription" maxlength="500" placeholder="Describe the product"></textarea></div></div><button class="primary" type="submit" id="submitButton">Send for approval</button><p class="status" id="formStatus" aria-live="polite"></p></form></div></div>
 <script>
 // Public website settings. The publishable key is intended for browser use; never use a secret/service-role key here.
-const SUPABASE_URL = 'https://qsomhinslmogpirvmxqj.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_6ABb5hsxnEZxSc7YMQToAA_cuGq-Ix8';
+
+const SUPABASE_URL = 'https://amntxykwdxwgsipqjgfo.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_3nPXCLqeKcmfVSqIzXDUNg_-1cAL4DD';
 const WHATSAPP_NUMBER = '256753443115';
 const demoProducts = [
  {id:'demo-1',name:'Everyday Backpack',price:45000,category:'Accessories',description:'A practical everyday bag for work, school and travel.',image_url:'',available:true,featured:true},
