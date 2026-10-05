@@ -134,6 +134,24 @@
     display:none;
   }
 }
+.logo{
+  width:64px;
+  height:48px;
+  border-radius:8px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  flex-shrink:0;
+}
+
+.logo img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -149,7 +167,9 @@
     </button>
 
     <div class="brand">
-      <div class="logo">S</div>
+      <div class="logo">
+  <img src="utc-elgon-logo.jpg" alt="UTC Elgon logo">
+</div>
       <div>
         SHOP EASY UTC-ELGON
         <small>YOUR EVERYDAY SHOP</small>
