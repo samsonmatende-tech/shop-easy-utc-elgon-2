@@ -152,6 +152,13 @@
   object-fit:contain;
   display:block;
 }
+  .contact-icon{
+  width:22px;
+  height:22px;
+  object-fit:contain;
+  vertical-align:middle;
+  margin-right:7px;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -225,6 +232,7 @@
   <button class="menu-link" data-menu="about">
     ℹ️ About us
   </button>
+  
 
 </aside>
 <main class="wrap">
@@ -334,4 +342,12 @@ document.addEventListener('keydown',e=>{
 $('submissionForm').addEventListener('submit',async e=>{e.preventDefault();const status=$('formStatus'),button=$('submitButton');if(!isConfigured()){status.textContent='The shop owner needs to add the Supabase publishable key to the website first.';return}const item={name:$('pName').value.trim(),price:Number($('pPrice').value),category:$('pCategory').value.trim()||'Other',image_url:$('pImage').value.trim()||null,description:$('pDescription').value.trim()};if(!item.name||!Number.isSafeInteger(item.price)||item.price<0){status.textContent='Enter a product name and a whole-number price of zero or more.';return}button.disabled=true;status.textContent='Sending for approval…';try{const {error}=await db.from('product_submissions').insert(item);if(error){console.error(error);status.textContent='Could not submit: '+error.message;return}$('submissionForm').reset();status.textContent='Submitted successfully. Your product will appear after the shop owner approves it.'}catch(err){console.error(err);status.textContent='Connection error. Please try again.'}finally{button.disabled=false}});
 (async()=>{if(!window.supabase?.createClient){$('productGrid').innerHTML='<div class="empty">Could not load the shop connection. Refresh and try again.</div>';return}await loadProducts()})();
 </script>
+  <h4>
+  <img src="gmail.png" class="contact-icon" alt="Gmail">
+  Email
+</h4>
+  <h4>
+  <img src="whatsapp.png" class="contact-icon" alt="WhatsApp">
+  WhatsApp
+</h4>
 </body></html>
