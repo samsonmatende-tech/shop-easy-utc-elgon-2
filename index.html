@@ -244,7 +244,14 @@
 <div class="toolbar"><input id="search" placeholder="Search products…" aria-label="Search products"><select id="category"><option value="all">All categories</option></select><select id="sort"><option value="featured">Featured</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="az">Name: A–Z</option></select></div>
 <div class="grid" id="productGrid"><div class="empty">Loading products…</div></div></main>
 <footer><div class="wrap"><strong>SHOP EASY UTC-ELGON</strong><p>Browse. Choose. WhatsApp us to order.</p><span>Prices shown in UGX. Availability, delivery and final order details are confirmed with you on WhatsApp.</span></div></footer>
-<div class="overlay" id="submitModal" role="dialog" aria-modal="true" aria-labelledby="submitTitle"><div class="panel"><div class="panel-head"><h2 id="submitTitle">Submit a product</h2><button class="xbtn" id="submitClose">Close ✕</button></div><div class="notice">Submit a product for review. It will not appear in the shop until the shop owner approves it. Please provide an image URL from a publicly accessible image.</div><form id="submissionForm"><div class="formgrid"><div class="field"><label for="pName">Product name *</label><input id="pName" required maxlength="100"></div><div class="field"><label for="pPrice">Price (UGX) *</label><input id="pPrice" required type="number" min="0" step="1"></div><div class="field"><label for="pCategory">Category</label><input id="pCategory" maxlength="50" placeholder="e.g. Fashion"></div><div class="field"><label for="pImage">Image URL</label><input id="pImage" type="url" placeholder="https://…"></div><div class="field wide"><label for="pDescription">Description</label><textarea id="pDescription" maxlength="500" placeholder="Describe the product"></textarea></div></div><button class="primary" type="submit" id="submitButton">Send for approval</button><p class="status" id="formStatus" aria-live="polite"></p></form></div></div>
+<div class="overlay" id="submitModal" role="dialog" aria-modal="true" aria-labelledby="submitTitle"><div class="panel"><div class="panel-head"><h2 id="submitTitle">Submit a product</h2><button class="xbtn" id="submitClose">Close ✕</button></div><div class="notice">
+  Submit a product for review. It will not appear in the shop until the shop owner approves it.
+  Please choose a clear photo of the product.
+</div><form id="submissionForm"><div class="formgrid"><div class="field"><label for="pName">Product name *</label><input id="pName" required maxlength="100"></div><div class="field"><label for="pPrice">Price (UGX) *</label><input id="pPrice" required type="number" min="0" step="1"></div><div class="field"><label for="pCategory">Category</label><input id="pCategory" maxlength="50" placeholder="e.g. Fashion"></div><div class="field">
+  <label for="pImage">Product Image *</label>
+  <input id="pImage" type="file" accept="image/*" required>
+  <small class="muted">Choose a product photo from your phone.</small>
+</div><div class="field wide"><label for="pDescription">Description</label><textarea id="pDescription" maxlength="500" placeholder="Describe the product"></textarea></div></div><button class="primary" type="submit" id="submitButton">Send for approval</button><p class="status" id="formStatus" aria-live="polite"></p></form></div></div>
 <script>
 // Public website settings. The publishable key is intended for browser use; never use a secret/service-role key here.
 
@@ -339,7 +346,100 @@ document.addEventListener('keydown',e=>{
   }
 });
  $('submitOpen').addEventListener('click',openSubmit);$('submitClose').addEventListener('click',closeSubmit);$('submitModal').addEventListener('click',e=>{if(e.target===$('submitModal'))closeSubmit()});$('contactBtn').addEventListener('click',()=>window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello Shop Easy UTC-ELGON! I would like to ask about your products.')}`,'_blank','noopener'));$('search').addEventListener('input',render);$('category').addEventListener('change',render);$('sort').addEventListener('change',render);
-$('submissionForm').addEventListener('submit',async e=>{e.preventDefault();const status=$('formStatus'),button=$('submitButton');if(!isConfigured()){status.textContent='The shop owner needs to add the Supabase publishable key to the website first.';return}const item={name:$('pName').value.trim(),price:Number($('pPrice').value),category:$('pCategory').value.trim()||'Other',image_url:$('pImage').value.trim()||null,description:$('pDescription').value.trim()};if(!item.name||!Number.isSafeInteger(item.price)||item.price<0){status.textContent='Enter a product name and a whole-number price of zero or more.';return}button.disabled=true;status.textContent='Sending for approval…';try{const {error}=await db.from('product_submissions').insert(item);if(error){console.error(error);status.textContent='Could not submit: '+error.message;return}$('submissionForm').reset();status.textContent='Submitted successfully. Your product will appear after the shop owner approves it.'}catch(err){console.error(err);status.textContent='Connection error. Please try again.'}finally{button.disabled=false}});
+$('submissionForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+
+  const status=$('formStatus');
+  const button=$('submitButton');
+
+  if(!isConfigured()){
+    status.textContent='The shop owner needs to add the Supabase publishable key to the website first.';
+    return;
+  }
+
+  const file=$('pImage').files[0];
+
+  if(!file){
+    status.textContent='Please choose a product image.';
+    return;
+  }
+
+  if(!file.type.startsWith('image/')){
+    status.textContent='Please choose an image file.';
+    return;
+  }
+
+  if(file.size>5*1024*1024){
+    status.textContent='Image is too large. Please choose an image under 5 MB.';
+    return;
+  }
+
+  const item={
+    name:$('pName').value.trim(),
+    price:Number($('pPrice').value),
+    category:$('pCategory').value.trim()||'Other',
+    image_url:null,
+    description:$('pDescription').value.trim()
+  };
+
+  if(!item.name||!Number.isSafeInteger(item.price)||item.price<0){
+    status.textContent='Enter a product name and a whole-number price of zero or more.';
+    return;
+  }
+
+  button.disabled=true;
+
+  try{
+    status.textContent='Uploading image…';
+
+    const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const filePath=`submissions/${crypto.randomUUID()}-${safeName}`;
+
+    const {error:uploadError}=await db
+      .storage
+      .from('product-images')
+      .upload(filePath,file,{
+        cacheControl:'3600',
+        upsert:false,
+        contentType:file.type
+      });
+
+    if(uploadError){
+      console.error(uploadError);
+      status.textContent='Could not upload image: '+uploadError.message;
+      return;
+    }
+
+    const {data:publicData}=db
+      .storage
+      .from('product-images')
+      .getPublicUrl(filePath);
+
+    item.image_url=publicData.publicUrl;
+
+    status.textContent='Sending for approval…';
+
+    const {error}=await db
+      .from('product_submissions')
+      .insert(item);
+
+    if(error){
+      console.error(error);
+      status.textContent='Could not submit: '+error.message;
+      return;
+    }
+
+    $('submissionForm').reset();
+
+    status.textContent='Submitted successfully. Your product will appear after the shop owner approves it.';
+
+  }catch(err){
+    console.error(err);
+    status.textContent='Connection error. Please try again.';
+  }finally{
+    button.disabled=false;
+  }
+});
 (async()=>{if(!window.supabase?.createClient){$('productGrid').innerHTML='<div class="empty">Could not load the shop connection. Refresh and try again.</div>';return}await loadProducts()})();
 </script>
 <footer id="about">
